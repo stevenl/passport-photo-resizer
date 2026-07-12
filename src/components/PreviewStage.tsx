@@ -51,6 +51,8 @@ export default function PreviewStage({
 
   const dragTargetRef = useRef<"none" | "chin" | "crown" | "image">("none");
   const lastPointerRef = useRef<Point | null>(null);
+  const onZoomRef = useRef(onZoom);
+  onZoomRef.current = onZoom;
 
   const getView = useCallback((): ViewTransform => {
     const s = latestState.current;
@@ -259,16 +261,26 @@ export default function PreviewStage({
     [onDraggingChange],
   );
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLCanvasElement>) => {
+  // React registers wheel listeners as passive by default — passive listeners
+  // cannot call preventDefault(), which is what we need to stop the page
+  // scrolling while the user zooms the canvas. The only fix is a native
+  // addEventListener with { passive: false }. We read onZoom through a ref
+  // so the effect has no dependencies and the listener is registered exactly
+  // once, with no teardown/re-registration gap that would let a passive
+  // synthetic event fire in between.
+  useEffect(() => {
+    const canvas = overlayCanvasRef.current;
+    if (!canvas) return;
+    const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const s = latestState.current;
       const delta = -e.deltaY * 0.001;
       const newZoom = Math.min(4, Math.max(0.2, s.ui.zoom * (1 + delta)));
-      onZoom(newZoom);
-    },
-    [onZoom],
-  );
+      onZoomRef.current(newZoom);
+    };
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+  }, []); // empty deps — listener is stable via refs, never re-registered
 
   return (
     <div
@@ -283,7 +295,6 @@ export default function PreviewStage({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        onWheel={handleWheel}
       />
       {!state.image.working && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-ink-faint">
