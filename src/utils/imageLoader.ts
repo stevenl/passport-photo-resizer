@@ -1,6 +1,6 @@
 const MAX_WORKING_DIMENSION = 1600;
-const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB, per SPECIFICATION.md §3.1
-const SUPPORTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/heic", "image/heif"];
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+const SUPPORTED_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 
 export class UnsupportedFormatError extends Error {}
 export class FileTooLargeError extends Error {}
@@ -14,10 +14,10 @@ export function validateFile(file: File): void {
   const type = file.type.toLowerCase();
   const isSupported =
     SUPPORTED_TYPES.includes(type) ||
-    /\.(jpe?g|png|heic|heif)$/i.test(file.name);
+    /\.(jpe?g|png)$/i.test(file.name);
   if (!isSupported) {
     throw new UnsupportedFormatError(
-      `"${file.name}" doesn't look like a JPG, PNG, or HEIC image.`,
+      `"${file.name}" doesn't look like a JPG or PNG. If you have a HEIC photo, export it as JPG from your camera app first.`,
     );
   }
 }
@@ -61,8 +61,7 @@ export interface ImageQualityCheck {
 
 /**
  * Basic dimension sanity check, per SPECIFICATION.md §5 "Image too small".
- * (Blur detection is intentionally out of scope for the pure-JS MVP — flagged
- * as a known simplification; see README.)
+ * (Blur detection is intentionally out of scope for the pure-JS MVP.)
  */
 export function checkImageQuality(width: number, height: number): ImageQualityCheck {
   const MIN_DIMENSION = 400;

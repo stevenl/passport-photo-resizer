@@ -1,8 +1,8 @@
 # Passport Photo Resizer
 
 A fully client-side web app that resizes, crops, and formats portrait photos
-into compliant passport/visa/ID photos. Built from `specification.md`,
-`architecture.md`, and `face-detection-specification.md`.
+into compliant passport/visa/ID photos. Built from `SPECIFICATION.md`,
+`ARCHITECTURE.md`, and `FACE_DETECTION_SPEC.md`.
 
 No image you load is ever uploaded anywhere — everything (face detection,
 cropping, scaling, export) runs locally in your browser using MediaPipe's
@@ -75,7 +75,7 @@ worth knowing if you pick this up:
   client-side HEIC→JPEG decode step (e.g. `heic2any` or a WASM decoder)
   before handing the file to `decodeOriginalImage()` in
   `src/utils/imageLoader.ts`.
-- **Blur detection is not implemented.** `specification.md` §5 lists "image
+- **Blur detection is not implemented.** `SPECIFICATION.md` §5 lists "image
   too blurry" as an error case; this MVP only checks pixel *dimensions*
   (`checkImageQuality` in `imageLoader.ts`), not actual sharpness. A real
   blur metric (e.g. variance of Laplacian) could be added there.
@@ -97,4 +97,4 @@ worth knowing if you pick this up:
 
 React 18 + TypeScript + Vite, Tailwind CSS, MediaPipe Tasks Vision
 (Face Landmarker), Canvas/OffscreenCanvas — matching the stack recommended
-in `specification.md` §8.
+in `SPECIFICATION.md` §8.

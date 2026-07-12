@@ -98,7 +98,7 @@ export default function UploadPanel({ onImageReady }: UploadPanelProps) {
             Drop a portrait, or choose a file
           </p>
           <p className="mt-1 text-sm text-ink-soft">
-            JPG, PNG, or HEIC · up to 20 MB · processed entirely on this device
+            JPG or PNG · up to 20 MB · processed entirely on this device
           </p>
         </div>
 
@@ -118,7 +118,7 @@ export default function UploadPanel({ onImageReady }: UploadPanelProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/heic,image/heif"
+          accept="image/jpeg,image/jpg,image/png"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
