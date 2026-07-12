@@ -1,8 +1,8 @@
 # Passport Photo Resizer
 
 A fully client-side web app that resizes, crops, and formats portrait photos
-into compliant passport/visa/ID photos. Built from `SPECIFICATION.md`,
-`ARCHITECTURE.md`, and `FACE_DETECTION_SPEC.md`.
+into compliant passport/visa/ID photos. Built from `docs/specification.md`,
+`docs/architecture.md`, and `docs/face-detection-spec.md`.
 
 No image you load is ever uploaded anywhere — everything (face detection,
 cropping, scaling, export) runs locally in your browser using MediaPipe's
@@ -26,7 +26,7 @@ Requires Node.js 18+.
 
 ## How it's organized
 
-This mirrors the layered architecture described in `architecture.md`:
+This mirrors the layered architecture described in `docs/architecture.md`:
 
 ```
 src/
@@ -54,13 +54,13 @@ The core invariants from the spec docs are upheld throughout:
   nothing is cached or stored as "the crop"; it's recomputed on every
   change.
 - **Detection runs once per image**, not continuously — there's no live
-  video loop, matching `architecture.md` §8.2.
+  video loop, matching `docs/architecture.md` §8.2.
 - **Canvas rendering runs on a `requestAnimationFrame` loop**, decoupled
-  from React's render cycle, per `architecture.md` §4.2/§5.3/§11.1.
+  from React's render cycle, per `docs/architecture.md` §4.2/§5.3/§11.1.
 
 ## Design
 
-See `design-notes.md` for the visual-identity rationale (the "drafting
+See `docs/design-notes.md` for the visual-identity rationale (the "drafting
 table / measurement instrument" direction, the dimension-line motif, color
 and type choices).
 
@@ -75,7 +75,7 @@ worth knowing if you pick this up:
   client-side HEIC→JPEG decode step (e.g. `heic2any` or a WASM decoder)
   before handing the file to `decodeOriginalImage()` in
   `src/utils/imageLoader.ts`.
-- **Blur detection is not implemented.** `SPECIFICATION.md` §5 lists "image
+- **Blur detection is not implemented.** `docs/specification.md` §5 lists "image
   too blurry" as an error case; this MVP only checks pixel *dimensions*
   (`checkImageQuality` in `imageLoader.ts`), not actual sharpness. A real
   blur metric (e.g. variance of Laplacian) could be added there.
@@ -97,7 +97,7 @@ worth knowing if you pick this up:
 
 React 18 + TypeScript + Vite, Tailwind CSS, MediaPipe Tasks Vision
 (Face Landmarker), Canvas/OffscreenCanvas — matching the stack recommended
-in `specification.md` §8.
+in `docs/specification.md` §8.
 
 ## Deploying to GitHub Pages
 

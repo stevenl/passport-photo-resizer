@@ -8,7 +8,7 @@ const ERROR_GUIDANCE: Record<AppError["code"], string> = {
   "image-too-small": "Use a higher-resolution source photo for an accurate result.",
   "image-too-blurry": "Use a sharper photo — focus on the face before capturing.",
   "face-near-edge": "Re-crop or re-take the photo with more space around the head.",
-  "unsupported-format": "Use a JPG, PNG, or HEIC image.",
+  "unsupported-format": "Use a JPG or PNG image; HEIC/HEIF is supported in Safari only.",
   "file-too-large": "Use a file under 20 MB, or export a smaller version from your camera app.",
   "detector-init-failed": "Face detection couldn't start — check your connection, then reload the page.",
 };
