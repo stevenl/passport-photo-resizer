@@ -155,3 +155,55 @@ export const PRINT_SHEET_SIZES_MM = {
   a4: { label: "A4", width: 210, height: 297 },
   letter: { label: "Letter", width: 215.9, height: 279.4 },
 } as const;
+
+// ---------------------------------------------------------------------------
+// Pure layout helpers — exported for unit testing
+// ---------------------------------------------------------------------------
+
+/**
+ * Computes output canvas pixel dimensions from mm + DPI.
+ * Pure function, no DOM required.
+ */
+export function computeOutputDimensions(
+  widthMm: number,
+  heightMm: number,
+  dpi: number,
+): { width: number; height: number } {
+  return {
+    width: Math.round(mmToPx(widthMm, dpi)),
+    height: Math.round(mmToPx(heightMm, dpi)),
+  };
+}
+
+/**
+ * Computes the top-left origin and photo cell dimensions for a print sheet
+ * grid layout. Pure function, no DOM required.
+ */
+export function computePrintSheetLayout(
+  photoSpecs: { widthMm: number; heightMm: number; dpi: number },
+  sheetSizeMm: { width: number; height: number },
+  marginMm: number,
+  layout: PrintSheetOptions["layout"],
+): {
+  sheetWidth: number;
+  sheetHeight: number;
+  photoWidth: number;
+  photoHeight: number;
+  startX: number;
+  startY: number;
+  cols: number;
+  rows: number;
+} {
+  const dpi = photoSpecs.dpi;
+  const sheetWidth = Math.round(mmToPx(sheetSizeMm.width, dpi));
+  const sheetHeight = Math.round(mmToPx(sheetSizeMm.height, dpi));
+  const marginPx = mmToPx(marginMm, dpi);
+  const photoWidth = Math.round(mmToPx(photoSpecs.widthMm, dpi));
+  const photoHeight = Math.round(mmToPx(photoSpecs.heightMm, dpi));
+  const { cols, rows } = LAYOUT_GRID[layout];
+  const totalGridWidth = cols * photoWidth + (cols - 1) * marginPx;
+  const totalGridHeight = rows * photoHeight + (rows - 1) * marginPx;
+  const startX = Math.max((sheetWidth - totalGridWidth) / 2, marginPx);
+  const startY = Math.max((sheetHeight - totalGridHeight) / 2, marginPx);
+  return { sheetWidth, sheetHeight, photoWidth, photoHeight, startX, startY, cols, rows };
+}

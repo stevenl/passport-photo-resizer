@@ -22,6 +22,27 @@ export function validateFile(file: File): void {
   }
 }
 
+/**
+ * Pure function: given an image's pixel dimensions, returns the target
+ * dimensions for the downscaled working copy (max 1600px on the long side).
+ * Exported so it can be unit-tested independently of createImageBitmap.
+ */
+export function computeWorkingCopyDimensions(
+  width: number,
+  height: number,
+): { width: number; height: number; needsResize: boolean } {
+  const longSide = Math.max(width, height);
+  if (longSide <= MAX_WORKING_DIMENSION) {
+    return { width, height, needsResize: false };
+  }
+  const ratio = MAX_WORKING_DIMENSION / longSide;
+  return {
+    width: Math.round(width * ratio),
+    height: Math.round(height * ratio),
+    needsResize: true,
+  };
+}
+
 /** Decodes a File into a full-resolution ImageBitmap. Original, never mutated. */
 export async function decodeOriginalImage(file: File): Promise<ImageBitmap> {
   return await createImageBitmap(file);
@@ -34,22 +55,16 @@ export async function decodeOriginalImage(file: File): Promise<ImageBitmap> {
 export async function createWorkingCopy(
   original: ImageBitmap,
 ): Promise<ImageBitmap> {
-  const { width, height } = original;
-  const longSide = Math.max(width, height);
-
-  if (longSide <= MAX_WORKING_DIMENSION) {
-    // Still produce an independent bitmap so callers can close() one
-    // without affecting the other.
+  const { width, height, needsResize } = computeWorkingCopyDimensions(
+    original.width,
+    original.height,
+  );
+  if (!needsResize) {
     return await createImageBitmap(original);
   }
-
-  const ratio = MAX_WORKING_DIMENSION / longSide;
-  const targetWidth = Math.round(width * ratio);
-  const targetHeight = Math.round(height * ratio);
-
   return await createImageBitmap(original, {
-    resizeWidth: targetWidth,
-    resizeHeight: targetHeight,
+    resizeWidth: width,
+    resizeHeight: height,
     resizeQuality: "high",
   });
 }
@@ -59,10 +74,6 @@ export interface ImageQualityCheck {
   warnings: string[];
 }
 
-/**
- * Basic dimension sanity check, per SPECIFICATION.md §5 "Image too small".
- * (Blur detection is intentionally out of scope for the pure-JS MVP.)
- */
 export function checkImageQuality(width: number, height: number): ImageQualityCheck {
   const MIN_DIMENSION = 400;
   const tooSmall = width < MIN_DIMENSION || height < MIN_DIMENSION;

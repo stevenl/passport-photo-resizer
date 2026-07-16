@@ -32,7 +32,7 @@ export interface ViewTransform {
  * so callers must use this — not raw CSS-pixel math — for anything drawn
  * outside of `drawWorkingImage` (which sets its own composed transform).
  */
-function toScreen(
+export function toScreen(
   point: { x: number; y: number },
   view: ViewTransform,
 ): { x: number; y: number } {

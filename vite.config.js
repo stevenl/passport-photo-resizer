@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig } from 'vitest/config';
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 // https://vite.dev/config/
@@ -12,6 +12,13 @@ export default defineConfig({
             // resolve at build/dev time.
             "@": fileURLToPath(new URL("./src", import.meta.url)),
         },
+    },
+    // Vitest — runs in node environment so no DOM/canvas needed for pure
+    // modules. The resolve alias above is inherited automatically.
+    test: {
+        environment: "node",
+        include: ["src/**/*.test.ts"],
+        globals: true,
     },
     plugins: [
         react(),
