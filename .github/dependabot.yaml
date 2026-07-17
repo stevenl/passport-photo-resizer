@@ -1,0 +1,45 @@
+version: 2
+updates:
+  # npm — covers both dependencies and devDependencies in package.json.
+  # Weekly schedule keeps the PR queue manageable; Dependabot will still
+  # open a PR immediately for any security advisory regardless of schedule.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: UTC
+    # Group all non-breaking updates into a single PR to reduce noise.
+    # Security updates always get their own PR regardless of this grouping.
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+    # Only auto-merge patch bumps on devDependencies; everything else
+    # requires a human to review (the CI workflow will still run on the PR).
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+
+  # GitHub Actions — keeps the pinned action versions (checkout, setup-node,
+  # upload-pages-artifact, deploy-pages) current so we get security fixes
+  # in the Actions runner supply chain.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions

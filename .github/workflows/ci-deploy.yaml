@@ -1,0 +1,72 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches: [main]   # validate direct main pushes and deploy
+  pull_request:        # validate PRs (including forks)
+
+# Cancel in-progress runs on the same branch/PR when a new commit arrives,
+# except on main where we want every deployment to complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  ci:
+    name: Typecheck, test & build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        # VITE_BASE_PATH tells Vite to use /repo-name/ as the asset base so
+        # all paths resolve correctly under GitHub Pages' sub-path URL.
+        # github.event.repository.name gives us the repo name without org prefix.
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+
+      # Only upload the Pages artefact on main — other branches just verify
+      # the build step exits cleanly.
+      - name: Upload Pages artefact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: ci
+    # Only deploy from main branch pushes, never from PRs or other branches.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

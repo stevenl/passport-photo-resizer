@@ -97,4 +97,14 @@ worth knowing if you pick this up:
 
 React 18 + TypeScript + Vite, Tailwind CSS, MediaPipe Tasks Vision
 (Face Landmarker), Canvas/OffscreenCanvas — matching the stack recommended
-in `SPECIFICATION.md` §8.
+in `specification.md` §8.
+
+## Deploying to GitHub Pages
+
+The included Actions workflow (`.github/workflows/deploy.yml`) runs on every push to `main`: it typechecks, runs tests, builds, and deploys automatically.
+
+One manual step is required the first time — in your GitHub repo go to **Settings → Pages → Build and deployment → Source** and select **GitHub Actions**. That's it; the workflow handles everything else.
+
+The live URL will be `https://<your-username>.github.io/<repo-name>/`. The `VITE_BASE_PATH` environment variable in the workflow sets Vite's `base` option to this sub-path automatically, so all assets resolve correctly. Local dev (`npm run dev`) is unaffected and still serves from `/`.
+
+Pull requests run the typecheck, test, and build steps but do not deploy.

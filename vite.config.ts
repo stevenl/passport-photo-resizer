@@ -1,16 +1,16 @@
 import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages serves from /repo-name/ rather than /. We read the base
+  // path from an environment variable set in the Actions workflow so local
+  // dev and preview still use the default "/".
+  base: process.env.VITE_BASE_PATH ?? "/",
   resolve: {
     alias: {
-      // Mirrors the "@/*" -> "src/*" mapping in tsconfig.json. tsconfig's
-      // `paths` only affects type-checking — Vite's own bundler needs this
-      // alias too, or every `@/...` import across the codebase fails to
-      // resolve at build/dev time.
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
