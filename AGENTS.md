@@ -172,22 +172,55 @@ type AppState = {
 
 ## Testing
 
-Unit tests live alongside their source files as `*.test.ts`. Run with
-`npm test`. The test environment is `node` (via Vitest) — no browser or DOM.
+Run with `npm test`. The environment is `node` (Vitest) — no browser or DOM.
+
+### Practice rule
+
+**Every new feature and every changed code path must ship with tests.**
+This is not optional. A PR that adds or modifies behaviour without
+corresponding tests will be incomplete.
+
+- New pure functions → unit test in the same directory as the source file,
+  named `<module>.test.ts`.
+- New behaviour that crosses module boundaries → integration test in
+  `src/integration/`, named `<concern>.test.ts`.
+- Browser-API or WASM-dependent code (canvas, MediaPipe) → document why it
+  is untestable in a comment in the source file; do not write a test that
+  mocks these away — mocked canvas tests give false confidence.
+
+### Unit tests
+
+Live alongside their source files as `*.test.ts`.
 
 **Testable without mocking (pure functions):**
-- All of `src/geometry/`
+- All of `src/geometry/` including `fitView.ts`
 - `src/state/reducer.ts` and `src/state/initialState.ts`
 - `validateFile`, `checkImageQuality`, `computeWorkingCopyDimensions` in `src/utils/imageLoader.ts`
 - `toScreen` and `clearCanvas` in `src/rendering/draw.ts`
 - `computeOutputDimensions`, `computePrintSheetLayout`, `PRINT_SHEET_SIZES_MM` in `src/rendering/export.ts`
-- `rescaleLandmarks` in `src/detection/faceDetector.ts`
+- `rescaleLandmarks`, `getModelLoadingState`, `subscribeToModelState` in `src/detection/faceDetector.ts`
 
 **Explicitly out of scope for unit tests (require browser APIs or WASM):**
 - `decodeOriginalImage`, `createWorkingCopy` — require `createImageBitmap`
 - `drawWorkingImage`, `drawCrop`, etc. — require `CanvasRenderingContext2D`
 - `renderFinalPhoto`, `renderPrintSheet`, `canvasToBlob`, `downloadBlob` — require DOM
 - `detectFaces`, `getFaceLandmarker` — require MediaPipe WASM + network
+- `main.tsx` eager-load call — side-effectful startup, nothing to assert
+
+### Integration tests
+
+Live in `src/integration/` as `*.test.ts`. They test the seams between
+modules — where one pure layer's output feeds another's input — without
+mocking either side.
+
+Current integration suites:
+- `reducerGeometry.test.ts` — `appReducer` action sequences → `computeGeometry` output
+- `fitViewTransform.test.ts` — `computeFitView` output → `toScreen` placement
+- `imageLoaderPipeline.test.ts` — `validateFile` + `computeWorkingCopyDimensions` + `checkImageQuality`
+
+Add a new integration test when a feature involves two or more modules
+cooperating and the unit tests for each module do not cover their
+interaction.
 
 ---
 
