@@ -1,122 +1,219 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useMemo, useReducer, useCallback, useRef } from "react";
+import { createInitialState } from "@/state/initialState";
+import { appReducer } from "@/state/reducer";
+import { computeGeometry } from "@/geometry";
+import { useFaceDetection } from "@/hooks/useFaceDetection";
 
-function App() {
-  const [count, setCount] = useState(0)
+import UploadPanel from "@/components/UploadPanel";
+import SpecsPanel from "@/components/SpecsPanel";
+import PreviewStage from "@/components/PreviewStage";
+import ControlsPanel from "@/components/ControlsPanel";
+import ExportPanel from "@/components/ExportPanel";
+import ErrorBanner from "@/components/ErrorBanner";
+import { DimensionLine, Panel, RulerProgress, type StepKey } from "@/components/Primitives";
+import { computeFitView } from "@/geometry";
+import type { PreviewStageHandle } from "@/components/PreviewStage";
+
+export default function App() {
+  const [state, dispatch] = useReducer(appReducer, undefined, createInitialState);
+
+  const geometry = useMemo(() => computeGeometry(state), [state]);
+  const previewRef = useRef<PreviewStageHandle>(null);
+
+  const { rerun, modelState } = useFaceDetection({
+    working: state.image.working,
+    workingWidth: state.image.workingWidth,
+    workingHeight: state.image.workingHeight,
+    originalWidth: state.image.width,
+    originalHeight: state.image.height,
+    onStart: () => dispatch({ type: "DETECTION_STARTED" }),
+    onSuccess: (candidates, confidence) => {
+      dispatch({
+        type: "DETECTION_SUCCEEDED",
+        candidates,
+        confidence,
+        selectedFaceIndex: 0,
+      });
+      // Fit the view to the primary detected face immediately after detection
+      // so the user sees the face centred and at a useful zoom level without
+      // having to adjust manually.
+      const primary = candidates[0];
+      if (primary && previewRef.current) {
+        const { width: canvasW, height: canvasH } =
+          previewRef.current.getContainerSize();
+        const { zoom, panX, panY } = computeFitView(
+          primary.boundingBox,
+          state.image.width,
+          state.image.height,
+          state.image.workingWidth,
+          state.image.workingHeight,
+          canvasW,
+          canvasH,
+        );
+        dispatch({ type: "SET_ZOOM", zoom });
+        dispatch({ type: "SET_PAN", panX, panY });
+      }
+    },
+    onFailure: (error) => dispatch({ type: "DETECTION_FAILED", error }),
+  });
+
+  const handleImageReady = useCallback(
+    (params: {
+      original: ImageBitmap;
+      working: ImageBitmap;
+      width: number;
+      height: number;
+      workingWidth: number;
+      workingHeight: number;
+      qualityWarnings: string[];
+    }) => {
+      dispatch({
+        type: "IMAGE_LOADED",
+        original: params.original,
+        working: params.working,
+        width: params.width,
+        height: params.height,
+        workingWidth: params.workingWidth,
+        workingHeight: params.workingHeight,
+      });
+      if (params.qualityWarnings.length > 0) {
+        dispatch({
+          type: "ADD_ERROR",
+          error: { code: "image-too-small", message: params.qualityWarnings[0] },
+        });
+      }
+    },
+    [],
+  );
+
+  const handleStartOver = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  const stepKey: StepKey =
+    state.phase === "upload"
+      ? "upload"
+      : state.phase === "specs"
+        ? "specs"
+        : state.phase === "exporting"
+          ? "exporting"
+          : "editing";
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="flex min-h-screen flex-col">
+      <header className="border-b border-line bg-panel/80 px-5 py-4 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <DimensionLine />
+            <div>
+              <h1 className="font-display text-base font-extrabold uppercase tracking-wide text-ink">
+                Passport Photo Resizer
+              </h1>
+              <p className="font-mono text-[11px] text-ink-faint">
+                100% local · no uploads, no accounts
+              </p>
+            </div>
+          </div>
+          {state.phase !== "upload" && (
+            <button
+              onClick={handleStartOver}
+              className="font-display text-xs font-semibold uppercase tracking-wide text-ink-soft hover:text-ink"
+            >
+              Start over
+            </button>
+          )}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+        <div className="mx-auto mt-4 max-w-md">
+          <RulerProgress current={stepKey} />
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="flex-1 px-5 py-8">
+        <div className="mx-auto max-w-6xl">
+          {state.errors.length > 0 && (
+            <div className="mb-6">
+              <ErrorBanner
+                errors={state.errors}
+                onDismiss={(code) => dispatch({ type: "DISMISS_ERROR", code })}
+              />
+            </div>
+          )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {state.phase === "upload" && (
+            <div className="flex justify-center py-8">
+              <UploadPanel onImageReady={handleImageReady} modelState={modelState} />
+            </div>
+          )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {state.phase !== "upload" && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+              <div className="space-y-6 lg:order-1">
+                <Panel className="p-5">
+                  <SpecsPanel
+                    specs={state.specs}
+                    onChange={(specs) => dispatch({ type: "UPDATE_SPECS", specs })}
+                  />
+                </Panel>
+
+                {state.phase !== "specs" && (
+                  <Panel className="p-5">
+                    <ControlsPanel
+                      state={state}
+                      geometry={geometry}
+                      modelState={modelState}
+                      onZoomChange={(zoom) => dispatch({ type: "SET_ZOOM", zoom })}
+                      onResetCrop={() => {
+                        dispatch({ type: "SET_ZOOM", zoom: 1 });
+                        dispatch({ type: "SET_PAN", panX: 0, panY: 0 });
+                      }}
+                      onClearManualOverrides={() => dispatch({ type: "CLEAR_MANUAL_OVERRIDES" })}
+                      onSelectFace={(index) => dispatch({ type: "SELECT_FACE", index })}
+                      onRedetect={() => rerun()}
+                    />
+                  </Panel>
+                )}
+              </div>
+
+              <div className="order-2 flex flex-col gap-4 lg:order-2">
+                <div className="h-[60vh] min-h-[420px] lg:h-[calc(100vh-260px)]">
+                  <PreviewStage
+                    ref={previewRef}
+                    state={state}
+                    geometry={geometry}
+                    onDragChin={(point) =>
+                      dispatch({ type: "SET_MANUAL_OVERRIDE", target: "chin", point })
+                    }
+                    onDragCrown={(point) =>
+                      dispatch({ type: "SET_MANUAL_OVERRIDE", target: "crown", point })
+                    }
+                    onDraggingChange={(target) => dispatch({ type: "SET_DRAGGING", target })}
+                    onPan={(panX, panY) => dispatch({ type: "SET_PAN", panX, panY })}
+                    onZoom={(zoom) => dispatch({ type: "SET_ZOOM", zoom })}
+                  />
+                </div>
+
+                {state.phase !== "specs" && (
+                  <Panel className="p-5">
+                    <ExportPanel
+                      original={state.image.original}
+                      geometry={geometry}
+                      specs={state.specs}
+                    />
+                  </Panel>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <footer className="border-t border-line px-5 py-4 text-center">
+        <p className="font-mono text-[11px] text-ink-faint">
+          No image leaves your device. Output is provided as-is — verify
+          against your destination country's current requirements before
+          submission.
+        </p>
+      </footer>
+    </div>
+  );
 }
-
-export default App
