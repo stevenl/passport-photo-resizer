@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppError, FaceLandmarks } from "@/types";
-import { detectFaces, rescaleLandmarks } from "@/detection/faceDetector";
+import {
+  detectFaces,
+  getModelLoadingState,
+  rescaleLandmarks,
+  subscribeToModelState,
+  type ModelLoadingState,
+} from "@/detection/faceDetector";
 
 interface UseFaceDetectionParams {
   working: ImageBitmap | null;
@@ -31,6 +37,10 @@ export function useFaceDetection({
 }: UseFaceDetectionParams) {
   const lastRunFor = useRef<ImageBitmap | null>(null);
   const [runToken, setRunToken] = useState(0);
+  const [modelState, setModelState] = useState<ModelLoadingState>(getModelLoadingState);
+
+  // Keep modelState in sync with the detector's loading progress.
+  useEffect(() => subscribeToModelState(setModelState), []);
 
   useEffect(() => {
     if (!working) return;
@@ -71,5 +81,5 @@ export function useFaceDetection({
     setRunToken((t) => t + 1);
   }
 
-  return { rerun };
+  return { rerun, modelState };
 }

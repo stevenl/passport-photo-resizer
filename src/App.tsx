@@ -17,7 +17,7 @@ export default function App() {
 
   const geometry = useMemo(() => computeGeometry(state), [state]);
 
-  const { rerun } = useFaceDetection({
+  const { rerun, modelState } = useFaceDetection({
     working: state.image.working,
     workingWidth: state.image.workingWidth,
     workingHeight: state.image.workingHeight,
@@ -118,7 +118,7 @@ export default function App() {
 
           {state.phase === "upload" && (
             <div className="flex justify-center py-8">
-              <UploadPanel onImageReady={handleImageReady} />
+              <UploadPanel onImageReady={handleImageReady} modelState={modelState} />
             </div>
           )}
 
@@ -137,6 +137,7 @@ export default function App() {
                     <ControlsPanel
                       state={state}
                       geometry={geometry}
+                      modelState={modelState}
                       onZoomChange={(zoom) => dispatch({ type: "SET_ZOOM", zoom })}
                       onResetCrop={() => {
                         dispatch({ type: "SET_ZOOM", zoom: 1 });

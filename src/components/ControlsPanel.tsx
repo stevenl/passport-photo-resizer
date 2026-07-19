@@ -1,10 +1,12 @@
 import React from "react";
 import type { AppState, GeometryResult } from "@/types";
+import type { ModelLoadingState } from "@/detection/faceDetector";
 import { Eyebrow, SecondaryButton } from "./Primitives";
 
 interface ControlsPanelProps {
   state: AppState;
   geometry: GeometryResult;
+  modelState: ModelLoadingState;
   onZoomChange: (zoom: number) => void;
   onResetCrop: () => void;
   onClearManualOverrides: () => void;
@@ -31,6 +33,7 @@ function ConfidenceMeter({ confidence }: { confidence: number }) {
 export default function ControlsPanel({
   state,
   geometry,
+  modelState,
   onZoomChange,
   onResetCrop,
   onClearManualOverrides,
@@ -49,6 +52,23 @@ export default function ControlsPanel({
           looks off. Drag the background to pan.
         </p>
       </div>
+
+
+      {modelState === "loading" && (
+        <div className="flex items-center gap-2 rounded-sm border border-line bg-paper/60 px-3 py-2.5">
+          <svg className="h-3.5 w-3.5 animate-spin text-ink-faint" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          <p className="font-mono text-xs text-ink-faint">Loading face detection model…</p>
+        </div>
+      )}
+
+      {modelState === "error" && (
+        <div className="rounded-sm border border-warn/40 bg-warn/10 px-3 py-2.5 text-xs text-ink">
+          Face detection model failed to load. Check your connection and click Re-detect face to retry.
+        </div>
+      )}
 
       {state.detection.hasRun && (
         <ConfidenceMeter confidence={state.detection.confidence} />

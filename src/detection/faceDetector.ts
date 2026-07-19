@@ -21,7 +21,32 @@ const WASM_BASE =
 const MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
+export type ModelLoadingState = "idle" | "loading" | "ready" | "error";
+
 let landmarkerPromise: Promise<FaceLandmarker> | null = null;
+let modelLoadingState: ModelLoadingState = "idle";
+const modelStateListeners = new Set<(s: ModelLoadingState) => void>();
+
+function setModelState(s: ModelLoadingState) {
+  modelLoadingState = s;
+  modelStateListeners.forEach((fn) => fn(s));
+}
+
+/** Returns the current model initialisation state synchronously. */
+export function getModelLoadingState(): ModelLoadingState {
+  return modelLoadingState;
+}
+
+/**
+ * Subscribe to model loading state changes. Returns an unsubscribe function.
+ * Used by useFaceDetection to reflect loading progress in the UI.
+ */
+export function subscribeToModelState(
+  fn: (s: ModelLoadingState) => void,
+): () => void {
+  modelStateListeners.add(fn);
+  return () => modelStateListeners.delete(fn);
+}
 
 /**
  * Loads the MediaPipe Face Landmarker model exactly once and caches the
@@ -29,6 +54,7 @@ let landmarkerPromise: Promise<FaceLandmarker> | null = null;
  */
 export function getFaceLandmarker(): Promise<FaceLandmarker> {
   if (!landmarkerPromise) {
+    setModelState("loading");
     landmarkerPromise = (async () => {
       const filesetResolver = await FilesetResolver.forVisionTasks(WASM_BASE);
       try {
@@ -57,11 +83,17 @@ export function getFaceLandmarker(): Promise<FaceLandmarker> {
           minFacePresenceConfidence: 0.5,
         });
       }
-    })().catch((err) => {
-      // Allow retry on next call if init fails.
-      landmarkerPromise = null;
-      throw err;
-    });
+    })()
+      .then((lm) => {
+        setModelState("ready");
+        return lm;
+      })
+      .catch((err) => {
+        setModelState("error");
+        // Allow retry on next call if init fails.
+        landmarkerPromise = null;
+        throw err;
+      });
   }
   return landmarkerPromise;
 }
