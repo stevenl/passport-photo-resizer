@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import type { AppState, FaceLandmarks, GeometryResult, Point } from "@/types";
 import {
   clearCanvas,
@@ -9,6 +9,11 @@ import {
   type ViewTransform,
 } from "@/rendering/draw";
 import { isWithinHitRadius } from "@/geometry/primitives";
+
+export interface PreviewStageHandle {
+  /** Returns the current CSS pixel dimensions of the canvas container. */
+  getContainerSize(): { width: number; height: number };
+}
 
 interface PreviewStageProps {
   state: AppState;
@@ -28,7 +33,7 @@ interface PreviewStageProps {
  * when its props identity changes (new image, new geometry callback refs),
  * never on every pointer move.
  */
-export default function PreviewStage({
+const PreviewStage = forwardRef<PreviewStageHandle, PreviewStageProps>(function PreviewStage({
   state,
   geometry,
   onDragChin,
@@ -36,7 +41,7 @@ export default function PreviewStage({
   onDraggingChange,
   onPan,
   onZoom,
-}: PreviewStageProps) {
+}, ref) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,6 +58,14 @@ export default function PreviewStage({
   const lastPointerRef = useRef<Point | null>(null);
   const onZoomRef = useRef(onZoom);
   onZoomRef.current = onZoom;
+
+  useImperativeHandle(ref, () => ({
+    getContainerSize() {
+      const el = containerRef.current;
+      if (!el) return { width: 0, height: 0 };
+      return { width: el.clientWidth, height: el.clientHeight };
+    },
+  }));
 
   const getView = useCallback((): ViewTransform => {
     const s = latestState.current;
@@ -310,6 +323,7 @@ export default function PreviewStage({
       )}
     </div>
   );
-}
+});
 
+export default PreviewStage;
 export type { FaceLandmarks };

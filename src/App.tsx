@@ -1,4 +1,4 @@
-import React, { useMemo, useReducer, useCallback } from "react";
+import React, { useMemo, useReducer, useCallback, useRef } from "react";
 import { createInitialState } from "@/state/initialState";
 import { appReducer } from "@/state/reducer";
 import { computeGeometry } from "@/geometry";
@@ -11,11 +11,14 @@ import ControlsPanel from "@/components/ControlsPanel";
 import ExportPanel from "@/components/ExportPanel";
 import ErrorBanner from "@/components/ErrorBanner";
 import { DimensionLine, Panel, RulerProgress, type StepKey } from "@/components/Primitives";
+import { computeFitView } from "@/geometry";
+import type { PreviewStageHandle } from "@/components/PreviewStage";
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, undefined, createInitialState);
 
   const geometry = useMemo(() => computeGeometry(state), [state]);
+  const previewRef = useRef<PreviewStageHandle>(null);
 
   const { rerun, modelState } = useFaceDetection({
     working: state.image.working,
@@ -24,13 +27,33 @@ export default function App() {
     originalWidth: state.image.width,
     originalHeight: state.image.height,
     onStart: () => dispatch({ type: "DETECTION_STARTED" }),
-    onSuccess: (candidates, confidence) =>
+    onSuccess: (candidates, confidence) => {
       dispatch({
         type: "DETECTION_SUCCEEDED",
         candidates,
         confidence,
         selectedFaceIndex: 0,
-      }),
+      });
+      // Fit the view to the primary detected face immediately after detection
+      // so the user sees the face centred and at a useful zoom level without
+      // having to adjust manually.
+      const primary = candidates[0];
+      if (primary && previewRef.current) {
+        const { width: canvasW, height: canvasH } =
+          previewRef.current.getContainerSize();
+        const { zoom, panX, panY } = computeFitView(
+          primary.boundingBox,
+          state.image.width,
+          state.image.height,
+          state.image.workingWidth,
+          state.image.workingHeight,
+          canvasW,
+          canvasH,
+        );
+        dispatch({ type: "SET_ZOOM", zoom });
+        dispatch({ type: "SET_PAN", panX, panY });
+      }
+    },
     onFailure: (error) => dispatch({ type: "DETECTION_FAILED", error }),
   });
 
@@ -154,6 +177,7 @@ export default function App() {
               <div className="order-2 flex flex-col gap-4 lg:order-2">
                 <div className="h-[60vh] min-h-[420px] lg:h-[calc(100vh-260px)]">
                   <PreviewStage
+                    ref={previewRef}
                     state={state}
                     geometry={geometry}
                     onDragChin={(point) =>
