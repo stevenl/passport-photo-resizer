@@ -47,7 +47,7 @@ jobs:
       # the build step exits cleanly.
       - name: Upload Pages artefact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
