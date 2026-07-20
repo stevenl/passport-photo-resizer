@@ -202,9 +202,9 @@ describe("subscribeToModelState", () => {
   });
 
   it("stops calling the listener after unsubscribing", () => {
-    // We can\'t trigger a real state change without calling getFaceLandmarker,
+    // We can't trigger a real state change without calling getFaceLandmarker,
     // but we can verify that the unsubscribe function removes the listener
-    // from the set by checking it doesn\'t throw when called twice.
+    // from the set by checking it doesn't throw when called twice.
     const unsub = subscribeToModelState(() => {});
     expect(() => { unsub(); unsub(); }).not.toThrow();
   });

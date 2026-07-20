@@ -30,3 +30,7 @@ dev-dist/
 vite.config.js
 vite.config.d.ts
 tsconfig.tsbuildinfo
+
+# Playwright
+playwright-report/
+test-results/

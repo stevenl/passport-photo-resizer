@@ -1,6 +1,6 @@
-import type {AppState, GeometryResult, Point, Rect} from "@/types";
-import {distance} from "./primitives";
-import {mmToPx} from "./units";
+import type { AppState, GeometryResult, Point, Rect } from "@/types";
+import { distance } from "./primitives";
+import { mmToPx } from "./units";
 
 /**
  * Resolves the "final" landmark per face-detection-spec.md §10.2:

@@ -75,6 +75,7 @@ export default function UploadPanel({ onImageReady, modelState }: UploadPanelPro
   return (
     <div className="mx-auto w-full max-w-xl">
       <div
+        data-testid="upload-dropzone"
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -118,6 +119,7 @@ export default function UploadPanel({ onImageReady, modelState }: UploadPanelPro
 
         <input
           ref={fileInputRef}
+          data-testid="file-input"
           type="file"
           accept="image/jpeg,image/jpg,image/png"
           className="hidden"
@@ -142,7 +144,7 @@ export default function UploadPanel({ onImageReady, modelState }: UploadPanelPro
       </div>
 
       {error && (
-        <div className="mt-4 rounded-sm border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-ink">
+        <div data-testid="upload-error" className="mt-4 rounded-sm border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-ink">
           {error}
         </div>
       )}

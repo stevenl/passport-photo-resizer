@@ -104,6 +104,7 @@ export default function ControlsPanel({
         </div>
         <input
           type="range"
+          data-testid="zoom-slider"
           min={0.2}
           max={4}
           step={0.01}
@@ -122,11 +123,11 @@ export default function ControlsPanel({
       )}
 
       <div className="flex flex-wrap gap-2">
-        <SecondaryButton onClick={onRedetect}>Re-detect face</SecondaryButton>
-        <SecondaryButton onClick={onClearManualOverrides} disabled={!hasOverrides}>
+        <SecondaryButton onClick={onRedetect} testId="btn-redetect">Re-detect face</SecondaryButton>
+        <SecondaryButton onClick={onClearManualOverrides} disabled={!hasOverrides} testId="btn-reset-markers">
           Reset markers
         </SecondaryButton>
-        <SecondaryButton onClick={onResetCrop}>Reset view</SecondaryButton>
+        <SecondaryButton onClick={onResetCrop} testId="btn-reset-view">Reset view</SecondaryButton>
       </div>
 
       <div className="rounded-sm border border-line bg-paper/60 px-3 py-2.5">

@@ -27,6 +27,7 @@ export default function ErrorBanner({
       {errors.map((err) => (
         <div
           key={err.code}
+          data-testid={`error-${err.code}`}
           className="flex items-start justify-between gap-3 rounded-sm border border-warn/40 bg-warn/10 px-4 py-3"
         >
           <div>

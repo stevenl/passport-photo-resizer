@@ -16,6 +16,7 @@ function NumberField({
   min = 0,
   max = 1000,
   step = 0.1,
+  testId,
 }: {
   label: string;
   value: number;
@@ -24,6 +25,7 @@ function NumberField({
   min?: number;
   max?: number;
   step?: number;
+  testId?: string;
 }) {
   const [raw, setRaw] = useState(String(value));
 
@@ -40,6 +42,7 @@ function NumberField({
         <input
           type="number"
           inputMode="decimal"
+          data-testid={testId}
           className="w-full bg-transparent px-3 py-2 font-mono text-sm tabular text-ink outline-none"
           value={raw}
           min={min}
@@ -81,6 +84,7 @@ export default function SpecsPanel({ specs, onChange }: SpecsPanelProps) {
           Quick preset
         </span>
         <select
+          data-testid="specs-preset"
           className="mt-1.5 w-full rounded-sm border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-ink"
           defaultValue=""
           onChange={(e) => {
@@ -107,6 +111,7 @@ export default function SpecsPanel({ specs, onChange }: SpecsPanelProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <NumberField
+          testId="specs-width"
           label="Output width"
           unit="mm"
           value={specs.widthMm}
@@ -115,6 +120,7 @@ export default function SpecsPanel({ specs, onChange }: SpecsPanelProps) {
           max={300}
         />
         <NumberField
+          testId="specs-height"
           label="Output height"
           unit="mm"
           value={specs.heightMm}
@@ -126,6 +132,7 @@ export default function SpecsPanel({ specs, onChange }: SpecsPanelProps) {
 
       <div>
         <NumberField
+          testId="specs-head-height"
           label="Head height (chin → crown)"
           unit="mm"
           value={specs.headHeightMm}
@@ -139,6 +146,7 @@ export default function SpecsPanel({ specs, onChange }: SpecsPanelProps) {
       </div>
 
       <NumberField
+        testId="specs-dpi"
         label="Resolution"
         unit="DPI"
         value={specs.dpi}

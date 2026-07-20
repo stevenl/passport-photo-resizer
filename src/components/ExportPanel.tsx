@@ -99,7 +99,7 @@ export default function ExportPanel({ original, geometry, specs }: ExportPanelPr
         </div>
       </div>
 
-      <PrimaryButton onClick={handleSinglePhotoExport} disabled={!canExport || isExporting} className="w-full">
+      <PrimaryButton onClick={handleSinglePhotoExport} disabled={!canExport || isExporting} className="w-full" testId="btn-download-photo">
         {isExporting ? "Rendering…" : "Download photo"}
       </PrimaryButton>
 
@@ -135,7 +135,7 @@ export default function ExportPanel({ original, geometry, specs }: ExportPanelPr
             </select>
           </label>
         </div>
-        <SecondaryButton onClick={handlePrintSheetExport} disabled={!canExport || isExporting} className="mt-3 w-full">
+        <SecondaryButton onClick={handlePrintSheetExport} disabled={!canExport || isExporting} className="mt-3 w-full" testId="btn-download-sheet">
           {isExporting ? "Rendering…" : "Download print sheet"}
         </SecondaryButton>
       </div>

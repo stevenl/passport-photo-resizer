@@ -116,6 +116,7 @@ export default function App() {
           </div>
           {state.phase !== "upload" && (
             <button
+              data-testid="btn-start-over"
               onClick={handleStartOver}
               className="font-display text-xs font-semibold uppercase tracking-wide text-ink-soft hover:text-ink"
             >
@@ -175,7 +176,7 @@ export default function App() {
               </div>
 
               <div className="order-2 flex flex-col gap-4 lg:order-2">
-                <div className="h-[60vh] min-h-[420px] lg:h-[calc(100vh-260px)]">
+                <div data-testid="preview-stage" className="h-[60vh] min-h-[420px] lg:h-[calc(100vh-260px)]">
                   <PreviewStage
                     ref={previewRef}
                     state={state}
