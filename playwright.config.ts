@@ -6,8 +6,10 @@ export default defineConfig({
   // on CI (one worker) to avoid port conflicts with the preview server.
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 1 : 0,
+  // Free-tier runners have 2 cores. Two workers keeps the preview server
+  // comfortable and roughly halves wall-clock time vs workers:1.
+  workers: process.env.CI ? 2 : undefined,
   reporter: [
     ["list"],
     ["html", { open: "never", outputFolder: "playwright-report" }],
@@ -24,14 +26,23 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
-    {
-      name: "mobile-chrome",
-      use: { ...devices["Pixel 5"] },
-    },
+    // Firefox and mobile-chrome run locally only (npm run test:e2e:local).
+    // On CI we run Chromium only: Firefox is 3-4× slower on free-tier runners
+    // and catches very few additional bugs for a React/Canvas app. Mobile
+    // layout is covered by the responsive tests in accessibility.test.ts
+    // which use page.context({ viewport }) rather than a separate browser.
+    ...(process.env.CI
+      ? []
+      : [
+          {
+            name: "firefox",
+            use: { ...devices["Desktop Firefox"] },
+          },
+          {
+            name: "mobile-chrome",
+            use: { ...devices["Pixel 5"] },
+          },
+        ]),
   ],
   // Build the app and serve it before running tests.
   // The build step also runs the Vite PWA plugin, ensuring the service worker

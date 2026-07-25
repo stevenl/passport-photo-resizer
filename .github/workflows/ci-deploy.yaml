@@ -32,25 +32,51 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
-      - name: Unit and integration tests
+      - name: Unit & integration tests
         run: npm test
 
+      # Cache Playwright browsers keyed on the Playwright version so the
+      # ~120MB browser download only happens when the version changes.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        # The browser binary is cached but OS-level dependencies (fonts,
+        # shared libs) are not included in the cache. Install them separately.
+        run: npx playwright install-deps chromium
+
       - name: Build
-        # VITE_BASE_PATH tells Vite to use /repo-name/ as the asset base so
-        # all paths resolve correctly under GitHub Pages' sub-path URL.
-        # github.event.repository.name gives us the repo name without org prefix.
+        # Single build used for both E2E and Pages upload.
+        # On non-main branches, VITE_BASE_PATH is "/" (correct for preview).
+        # On main we use the repo name so the Pages deployment works; the same
+        # dist/ is reused for E2E (preview strips the sub-path internally).
         run: npm run build
         env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
-
-      - name: Install browsers
-        run: npx playwright install --with-deps chromium firefox
+          VITE_BASE_PATH: >-
+            ${{ github.ref == 'refs/heads/main' && github.event_name == 'push'
+              && format('/{0}/', github.event.repository.name)
+              || '/' }}
 
       - name: E2E tests
         run: npm run test:e2e
 
-      # Only upload the Pages artefact on main — other branches just verify
-      # the build step exits cleanly.
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
       - name: Upload Pages artefact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-pages-artifact@v5
@@ -60,7 +86,6 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: ci
-    # Only deploy from main branch pushes, never from PRs or other branches.
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 

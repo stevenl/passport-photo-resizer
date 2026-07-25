@@ -19,13 +19,13 @@ the Canvas API. No image ever leaves the device.
 npm install          # install dependencies (first time only)
 npm run dev          # local dev server at http://localhost:5173
 npm run build        # production build → dist/
-npm run lint         # Run Oxlint linting
 npm run preview      # serve the production build locally
 npm test             # run the unit test suite (vitest, non-watch)
 npm run test:watch   # vitest in watch mode during development
 npx tsc --noEmit     # typecheck without emitting files
-npm run test:e2e     # Playwright E2E tests (builds app first if not on CI)
-npm run test:e2e:ui  # Playwright UI mode for interactive debugging
+npm run test:e2e       # Playwright E2E tests — Chromium only (mirrors CI)
+npm run test:e2e:local  # Playwright E2E tests — all browsers (Chromium, Firefox, mobile)
+npm run test:e2e:ui     # Playwright UI mode for interactive debugging
 ```
 
 All commands require Node.js 18+.
