@@ -73,6 +73,23 @@ test.describe("specs panel — presets", () => {
 // Manual input
 // ---------------------------------------------------------------------------
 test.describe("specs panel — manual input", () => {
+  test("uses 0.5mm increments for dimension inputs", async ({ page }) => {
+    for (const testId of ["specs-width", "specs-height", "specs-head-height"]) {
+      await expect(page.locator(`[data-testid="${testId}"]`)).toHaveAttribute("step", "0.5");
+    }
+  });
+
+  test("increments and decrements dimensions by 0.5mm with the keyboard", async ({ page }) => {
+    const input = page.locator('[data-testid="specs-width"]');
+
+    await input.focus();
+    await input.press("ArrowUp");
+    await expect(input).toHaveValue("35.5");
+
+    await input.press("ArrowDown");
+    await expect(input).toHaveValue("35");
+  });
+
   test("typing a new width updates the value", async ({ page }) => {
     const input = page.locator('[data-testid="specs-width"]');
     await input.fill("40");

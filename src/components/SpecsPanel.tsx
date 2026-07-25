@@ -15,7 +15,7 @@ function NumberField({
   onChange,
   min = 0,
   max = 1000,
-  step = 0.1,
+  step = 0.5,
   testId,
 }: {
   label: string;
