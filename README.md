@@ -24,6 +24,47 @@ npm run preview   # serve the production build locally to sanity-check it
 
 Requires Node.js 18+.
 
+## Testing
+
+The test suite has three complementary layers:
+
+- **Unit tests** cover pure, deterministic modules such as geometry, state,
+  image validation, and export-layout helpers. They run in Vitest's Node
+  environment, alongside their source files.
+- **Integration tests** live in `src/integration/` and exercise the seams
+  between pure modules without mocks.
+- **End-to-end (E2E) tests** live in `e2e/` and use Playwright to validate
+  complete browser journeys across Chromium, Firefox, and mobile Chrome.
+
+Run all Vitest unit and integration tests together:
+
+```bash
+npm test
+```
+
+During development, keep the Vitest suite running in watch mode:
+
+```bash
+npm run test:watch
+```
+
+Run the Playwright E2E suite:
+
+```bash
+npm run test:e2e
+```
+
+When run locally, the E2E command builds the production app and serves it
+before testing. For interactive Playwright debugging, use:
+
+```bash
+npm run test:e2e:ui
+```
+
+E2E tests stub MediaPipe's CDN assets, so they do not need a live model
+download. If this is the first time running Playwright on a machine, install
+its browser binaries with `npx playwright install`.
+
 ## How it's organized
 
 This mirrors the layered architecture described in `docs/architecture.md`:

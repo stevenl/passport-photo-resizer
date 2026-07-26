@@ -19,11 +19,13 @@ the Canvas API. No image ever leaves the device.
 npm install          # install dependencies (first time only)
 npm run dev          # local dev server at http://localhost:5173
 npm run build        # production build → dist/
-npm run lint         # Run Oxlint linting
 npm run preview      # serve the production build locally
 npm test             # run the unit test suite (vitest, non-watch)
 npm run test:watch   # vitest in watch mode during development
 npx tsc --noEmit     # typecheck without emitting files
+npm run test:e2e       # Playwright E2E tests — Chromium only (mirrors CI)
+npm run test:e2e:local  # Playwright E2E tests — all browsers (Chromium, Firefox, mobile)
+npm run test:e2e:ui     # Playwright UI mode for interactive debugging
 ```
 
 All commands require Node.js 18+.
@@ -221,6 +223,38 @@ Current integration suites:
 Add a new integration test when a feature involves two or more modules
 cooperating and the unit tests for each module do not cover their
 interaction.
+
+### E2E tests
+
+Live in `e2e/` and run with `npm run test:e2e` (Playwright, Chromium +
+Firefox + mobile Chrome). They require a built app — run `npm run build`
+first when running locally, or use `npm run test:e2e` which builds
+automatically outside CI.
+
+**What E2E tests cover:**
+- User journeys end-to-end through a real browser (upload → specs → editing → export)
+- File validation error messages appearing in the UI
+- Spec panel preset selection and manual input
+- Zoom slider range and reset behaviour
+- Export panel structure and format selection
+- Accessibility: heading hierarchy, focusable controls, ARIA labels
+- Responsive layout at 375px mobile width
+- No uncaught JS errors on the happy path
+
+**MediaPipe in E2E tests:** The CDN requests for the WASM runtime and model
+file are intercepted and stubbed via `e2e/helpers/setup.ts:stubMediaPipe()`.
+This makes tests fast and offline-capable. The stub returns a minimal valid
+WASM header, so `getFaceLandmarker()` will fail to initialise — tests are
+written to handle the resulting `detector-init-failed` error state rather
+than assuming successful detection.
+
+**Practice rule for E2E tests:**
+- New UI components or user-facing flows → add an E2E test covering the
+  happy path and the primary error path.
+- Add `data-testid` attributes to new interactive elements in the same PR
+  that introduces them. Never select by CSS class or visual text alone.
+- Do not add E2E tests for logic already covered by unit or integration
+  tests — E2E tests are for browser behaviour and user journeys only.
 
 ---
 

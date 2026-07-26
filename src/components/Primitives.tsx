@@ -106,16 +106,19 @@ export function PrimaryButton({
   disabled,
   type = "button",
   className = "",
+  testId,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit";
   className?: string;
+  testId?: string;
 }) {
   return (
     <button
       type={type}
+      data-testid={testId}
       onClick={onClick}
       disabled={disabled}
       className={`font-display text-sm font-semibold uppercase tracking-wide px-4 py-2.5 rounded-sm bg-ink text-paper hover:bg-ink/90 active:bg-ink/80 disabled:bg-ink-faint disabled:cursor-not-allowed transition-colors ${className}`}
@@ -130,15 +133,18 @@ export function SecondaryButton({
   onClick,
   disabled,
   className = "",
+  testId,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
+  testId?: string;
 }) {
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={onClick}
       disabled={disabled}
       className={`font-display text-sm font-semibold uppercase tracking-wide px-4 py-2.5 rounded-sm border border-ink/30 text-ink hover:bg-ink/5 active:bg-ink/10 disabled:text-ink-faint disabled:border-line disabled:cursor-not-allowed transition-colors ${className}`}
