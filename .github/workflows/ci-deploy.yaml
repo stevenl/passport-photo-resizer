@@ -54,17 +54,8 @@ jobs:
         # shared libs) are not included in the cache. Install them separately.
         run: npx playwright install-deps chromium
 
-      - name: Build
-        # Single build used for both E2E and Pages upload.
-        # On non-main branches, VITE_BASE_PATH is "/" (correct for preview).
-        # On main we use the repo name so the Pages deployment works; the same
-        # dist/ is reused for E2E (preview strips the sub-path internally).
+      - name: Build (for E2E, base "/")
         run: npm run build
-        env:
-          VITE_BASE_PATH: >-
-            ${{ github.ref == 'refs/heads/main' && github.event_name == 'push'
-              && format('/{0}/', github.event.repository.name)
-              || '/' }}
 
       - name: E2E tests
         run: npm run test:e2e
@@ -76,6 +67,12 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+      - name: Build (for Pages, base "/repo-name/")
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Upload Pages artefact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
